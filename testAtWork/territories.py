@@ -61,7 +61,7 @@ def main():
     firstSelection = None # stores the (x, y) of the first box clicked.
 
     DISPLAYSURF.fill(BGCOLOR)
-    startGameAnimation(mainBoard)
+    #startGameAnimation(mainBoard)
 
     while True: # main game loop
         mouseClicked = False
