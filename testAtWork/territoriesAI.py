@@ -83,8 +83,8 @@ class AI:
          #print "attacking: " +str(indexOfBestTile)
          
          return indexOfBestTile
-   def __init__(self,board):
-      self.stateOfBoard = board
+   
+   def __init__(self):
       self.state = 2
       
    #

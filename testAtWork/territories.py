@@ -5,9 +5,7 @@ from drawUtils import *
 from territoriesAI import AI
 from board import Board
 from highscore import HighScore
-global currentPlayer
-# draw on the surface object
-MAINWINDOW.fill(BGCOLOR)
+
 class textDisplay:
    currPlayer = 0
    currentPlayerDisplay = 0
@@ -70,7 +68,6 @@ class textDisplay:
       self.bluePointDisplay = allFont.render("Blue players points = 0",1,WHITE)
       self.redInfluenceDisplay = allFont.render("Red Player's strength = 1",1,WHITE)
       self.blueInfluenceDisplay = allFont.render("Blue Player's strength = 1",1,WHITE)
-#      self.updateRules()
       self.updateTextDisplay()
 #
 class player:
@@ -98,167 +95,260 @@ class player:
    def __init__(self):
       self.points = 0
 #
-b = Board()
-ai = AI(b.board)
-highScoreInterface = HighScore()
-turnNumber = 0
-pointsToPlayTo = 200
-p1 = player()
-p2 = player()
+class gameLogic:   
+   gameNotOver = True
+   b = Board()
+   ai = AI()
+   highScoreInterface = HighScore()
+   turnNumber = 0
+   pointsToPlayTo = 200
+   p1 = player()
+   p2 = player()
+   currentPlayer = 1
+   def __init__(self):
+      #nothing to initialize
+      MAINWINDOW.fill(BGCOLOR)
+      self.gameNotOver = True
+      self.b = Board()
+      self.turnNumber = 0
+      self.pointsToPlayTo = 200
+      self.p1 = player()
+      self.p2 = player()
+      self.currentPlayer = 1
+   def displayGame(self,gameMode):
+      #display the actual game
+      MAINWINDOW.fill(BGCOLOR)
+      for i in range(1, len(self.b.board)+1):
+         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.board[i].getStatus())
+      pygame.display.update()
 
-currentPlayerDisplay = ""
-for i in range(1, len(b.board)+1):
-   b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
-pygame.display.update()
-
-currentPlayer = 1
-redPoints = 0
-bluePoints = 0
-textBox = textDisplay(currentPlayer)
-textBox.changePoints(redPoints,bluePoints)
-for i in range(1, len(b.board)+1):
-   b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
-   strength = allFont.render(str(b.board[i].getStrength()),1,BLACK)
-   MAINWINDOW.blit(strength, b.board[i].getCoordinate())
-pygame.display.update()
-         
-# run the game loop
-while True:
-   mouseClicked = False
-   for event in pygame.event.get():
-      if event.type == QUIT:
-         pygame.quit()
-         sys.exit()
-      elif event.type == MOUSEMOTION:
-         mousex, mousey = event.pos
-      elif event.type == MOUSEBUTTONUP:
-         mousex, mousey = event.pos
-         mouseClicked = True
-      if mouseClicked == True:
-         turnNumber = turnNumber + 1
-         #figure out where the click was
-         for i in range(1,len(b.board)+1):
-            if b.isWithinSquareByIndex(mousex,mousey,i):
-               
-               redCount = 0
-               blueCount = 0
-               for j in range(1,len(b.board)+1):
-                  if b.board[j].getStatus() == RED:
-                     redCount = redCount + 1
-                  if b.board[j].getStatus() == BLUE:
-                     blueCount = blueCount + 1
-               if currentPlayer == 1:
-                  if not b.isPlayerAdjacent(i,1):
-                     continue
-                  if b.board[i].getStatus() == WHITE:
-                     b.board[i].setStatus(RED)
-                     b.board[i].setStrength(redCount)
-                  elif b.board[i].getStatus() == RED:
-                     b.board[i].setStrength(redCount)
-                  elif b.board[i].getStatus() == BLUE:
-                     redCount = redCount/2
-                     blueCount = blueCount/3 + b.board[i].getStrength()
-                     r = random.randint(1,100)
-                     if r > (100*redCount)/(blueCount+redCount):
-                        b.board[i].setStatus(RED)
-                        b.board[i].setStrength(redCount)
-                  currentPlayer = 2
-               elif currentPlayer == 2:
-                  if not b.isPlayerAdjacent(i,2):
-                     continue
-                  if b.board[i].getStatus() == WHITE:
-                     b.board[i].setStatus(BLUE)
-                     b.board[i].setStrength(b.board[i].getStrength() +1)
-                  elif b.board[i].getStatus() == BLUE:
-                     b.board[i].setStrength(b.board[i].getStrength() +1)
-                  elif b.board[i].getStatus() == RED:
-                     blueCount = blueCount/2
-                     redCount = redCount/3 + b.board[i].getStrength()
-                     r = random.randint(1,100)
-                     if r > (100*blueCount)/(blueCount+redCount):
-                        b.board[i].setStatus(BLUE)
-                        b.board[i].setStrength(blueCount)
-                  currentPlayer = 1
-               
-         #update the board
-         MAINWINDOW.fill(BGCOLOR)
-         textBox.changePlayer()
-         
-         redCount = 0
-         blueCount = 0
-         for i in range(1,len(b.board)+1):
-            if b.board[i].getStatus() == RED:
-               redCount = redCount + 1
-            if b.board[i].getStatus() == BLUE:
-               blueCount = blueCount + 1
-            b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
-            strength = allFont.render(str(b.board[i].getStrength()),1,BLACK)
-            MAINWINDOW.blit(strength, b.board[i].getCoordinate())
-         textBox.changeInfluence(redCount,blueCount)
-         pygame.display.update()
-         time.sleep(0.5)
-         aiMove = ai.getNextMove(b.board)
-         
-         if b.isPlayerAdjacent(aiMove,2):
-            if b.board[aiMove].getStatus() == WHITE:
-               b.board[aiMove].setStatus(BLUE)
-               b.board[aiMove].setStrength(blueCount)
-            elif b.board[aiMove].getStatus() == BLUE:
-               b.board[aiMove].setStrength(blueCount)
-            elif b.board[aiMove].getStatus() == RED:
-               blueCount = blueCount/2
-               redCount = redCount/3 + b.board[aiMove].getStrength()
-               r = random.randint(1,100)
-               if r > (100*blueCount)/(blueCount+redCount):
-                  b.board[aiMove].setStatus(BLUE)
-                  b.board[aiMove].setStrength(blueCount)
-         currentPlayer = 1
-         
-         MAINWINDOW.fill(BGCOLOR)
-         textBox.changePlayer()
-         p1.updatePoints(b.board,1)
-         p2.updatePoints(b.board,2)
-         
-         textBox.changePoints(p1.getPoints(),p2.getPoints())
-         redCount = 0
-         blueCount = 0
-         for i in range(1, len(b.board)+1):
-            if b.board[i].getStatus() == RED:
-               redCount = redCount + 1
-            if b.board[i].getStatus() == BLUE:
-               blueCount = blueCount + 1
-            b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
-            strength = allFont.render(str(b.board[i].getStrength()),1,BLACK)
-            MAINWINDOW.blit(strength, b.board[i].getCoordinate())
-         textBox.changeInfluence(redCount,blueCount)
-         pygame.display.update()
-         
-         if p1.getPoints() >= pointsToPlayTo:
-            if p2.getPoints() > p1.getPoints():
-               print "AI wins"
-               winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
-               MAINWINDOW.blit(winnerDisplay, (300,100))
-               pygame.display.update()
-               highScoreInterface.addScore("AI",p2.getPoints(),p1.getPoints(),turnNumber)
-               time.sleep(3)
+      self.textBox = textDisplay(self.currentPlayer)
+      self.textBox.changePoints(0,0)
+      for i in range(1, len(self.b.board)+1):
+         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.board[i].getStatus())
+         strength = allFont.render(str(self.b.board[i].getStrength()),1,BLACK)
+         MAINWINDOW.blit(strength, self.b.board[i].getCoordinate())
+      pygame.display.update()
+      
+      #start game loop
+      while self.gameNotOver:
+         mouseClicked = False
+         for event in pygame.event.get():
+            if event.type == QUIT:
                pygame.quit()
                sys.exit()
+            elif event.type == MOUSEMOTION:
+               mousex, mousey = event.pos
+            elif event.type == MOUSEBUTTONUP:
+               mousex, mousey = event.pos
+               mouseClicked = True
+            if mouseClicked == True:
+               self.turnNumber = self.turnNumber + 1
+               #figure out where the click was
+               for i in range(1,len(self.b.board)+1):
+                  if self.b.isWithinSquareByIndex(mousex,mousey,i):
+                     
+                     redCount = 0
+                     blueCount = 0
+                     for j in range(1,len(self.b.board)+1):
+                        if self.b.board[j].getStatus() == RED:
+                           redCount = redCount + 1
+                        if self.b.board[j].getStatus() == BLUE:
+                           blueCount = blueCount + 1
+                     if self.currentPlayer == 1:
+                        if not self.b.isPlayerAdjacent(i,1):
+                           continue
+                        if self.b.board[i].getStatus() == WHITE:
+                           self.conquerTile(i,1,redCount)
+                        elif self.b.board[i].getStatus() == RED:
+                           self.conquerTile(i,1,redCount)
+                        elif self.b.board[i].getStatus() == BLUE:
+                           if self.tryConqueringTile(redCount,blueCount,self.b.board[i].getStrength()):
+                              self.conquerTile(i,1,redCount)
+                        self.currentPlayer = 2
+                     elif self.currentPlayer == 2:
+                        if not self.b.isPlayerAdjacent(i,2):
+                           continue
+                        if self.b.board[i].getStatus() == WHITE:
+                           self.conquerTile(i,2,blueCount)
+                        elif self.b.board[i].getStatus() == BLUE:
+                           self.conquerTile(i,2,blueCount)
+                        elif self.b.board[i].getStatus() == RED:
+                           if self.tryConqueringTile(blueCount, redCount, self.b.board[i].getStrength()):
+                              self.conquerTile(i,2,blueCount)
+                        self.currentPlayer = 1
+                     
+               #update the board
+               MAINWINDOW.fill(BGCOLOR)
+               self.textBox.changePlayer()
+               (redCount,blueCount) = self.drawBoard()
                
-            print "Player wins"
-            winnerDisplay = allFont.render("Congratulations! You WON!", 1, WHITE)
-            MAINWINDOW.blit(winnerDisplay, (300,100))
-            pygame.display.update()
-            highScoreInterface.addScore("player",p1.getPoints(),p2.getPoints(),turnNumber)
-            time.sleep(3)
-            pygame.quit()
-            sys.exit()
-         elif p2.getPoints() >= pointsToPlayTo:
+               time.sleep(0.5)
+               aiMove = self.ai.getNextMove(self.b.board)
+               
+               if self.b.isPlayerAdjacent(aiMove,2):
+                  if self.b.board[aiMove].getStatus() == WHITE:
+                     self.conquerTile(aiMove,2,blueCount)
+                  elif self.b.board[aiMove].getStatus() == BLUE:
+                     self.conquerTile(aiMove,2,blueCount)
+                  elif self.b.board[aiMove].getStatus() == RED:
+                     if self.tryConqueringTile(blueCount, redCount, self.b.board[aiMove].getStrength()):
+                        self.conquerTile(aiMove,2,blueCount)
+               self.currentPlayer = 1
+               
+               MAINWINDOW.fill(BGCOLOR)
+               self.textBox.changePlayer()
+               self.p1.updatePoints(self.b.board,1)
+               self.p2.updatePoints(self.b.board,2)
+               
+               self.textBox.changePoints(self.p1.getPoints(),self.p2.getPoints())
+               
+               (redCount,blueCount) = self.drawBoard()
+               
+               self.isGameOver()
+   def displayMenu(self):
+      #display the menu to start a new game, single player, multiplayer etc...
+      
+      self.showMenu()
+      hostnameString = ""
+      UserHasNotQuit = True
+      while UserHasNotQuit:
+         mouseClicked = False
+         for event in pygame.event.get():
+            if event.type == QUIT:
+               pygame.quit()
+               sys.exit()
+            elif event.type == MOUSEMOTION:
+               mousex, mousey = event.pos
+            elif event.type == MOUSEBUTTONUP:
+               mousex, mousey = event.pos
+               mouseClicked = True
+            if event.type == KEYDOWN:
+               char = event.unicode
+               keyname = pygame.key.name(event.key)
+               if keyname == "backspace":
+                  hostnameString = hostnameString[0:len(hostnameString)-1]
+               elif len(hostnameString) < 15:
+                  hostnameString = hostnameString + char
+               pygame.draw.rect(MAINWINDOW, GREY,  (420,90,170,20))
+               self.hostnameDisplay = allFont.render(hostnameString, 1, BLACK)
+               MAINWINDOW.blit(self.hostnameDisplay, (420,90))     
+               pygame.display.update() 
+               
+            
+            if mouseClicked == True:
+               if self.checkIfClickIsWithinMenuButtons(mousex,mousey,300,0,250,20):
+                  #start single player mode
+                  self.__init__()
+                  self.displayGame(1)
+                  self.showMenu()
+               if self.checkIfClickIsWithinMenuButtons(mousex,mousey,300,30,250,20):
+                  #start hotseat mode
+                  self.__init__()
+                  self.displayGame(2)
+                  self.showMenu()
+               if self.checkIfClickIsWithinMenuButtons(mousex,mousey,300,60,250,20):
+                  #start multiplayer mode
+                  self.__init__()
+                  self.displayGame(3)
+                  self.showMenu()
+               #if self.checkIfClickIsWithinMenuButtons(mousex,mousey,300,120,250,20):
+                  #display rules
+                  
+               if self.checkIfClickIsWithinMenuButtons(mousex,mousey,300,200,250,20):
+                  UserHasNotQuit = False
+                  
+      pygame.quit()
+      sys.exit()
+   def showMenu(self):
+      MAINWINDOW.fill(BGCOLOR)
+      self.chooseDisplay = allFont.render("Choose play mode", 1, WHITE)
+      MAINWINDOW.blit(self.chooseDisplay, (0,0))
+      
+      pygame.draw.rect(MAINWINDOW, WHITE, (300,0,290,20))   #single
+      pygame.draw.rect(MAINWINDOW, GREY,  (300,30,290,20))  #hotseat
+      pygame.draw.rect(MAINWINDOW, GREY,  (300,60,290,20))  #LAN
+      pygame.draw.rect(MAINWINDOW, GREY,  (300,90,50,20))   #host
+      pygame.draw.rect(MAINWINDOW, GREY,  (360,90,50,20))   #join
+      pygame.draw.rect(MAINWINDOW, GREY,  (420,90,170,20))  #IP
+      pygame.draw.rect(MAINWINDOW, GREY,  (300,160,290,20)) #Rules
+      pygame.draw.rect(MAINWINDOW, WHITE, (300,200,290,20)) #Quit
+      
+      self.singlePlayerDisplay = allFont.render("Single Player", 1, BLACK)
+      MAINWINDOW.blit(self.singlePlayerDisplay, (300,0))
+      
+      self.hotseatDisplay = allFont.render("Multiplayer hotseat", 1, BLACK)
+      MAINWINDOW.blit(self.hotseatDisplay, (300,30))
+      
+      self.multiplayerDisplay = allFont.render("Multiplayer LAN", 1, BLACK)
+      MAINWINDOW.blit(self.multiplayerDisplay, (300,60))      
+      self.multiplayerDisplay = allFont.render("Host", 1, BLACK)
+      MAINWINDOW.blit(self.multiplayerDisplay, (300,90))      
+      self.multiplayerDisplay = allFont.render("Join", 1, BLACK)
+      MAINWINDOW.blit(self.multiplayerDisplay, (360,90))      
+      
+      self.helpDisplay = allFont.render("Display Rules", 1, BLACK)
+      self.quitDisplay = allFont.render("QUIT", 1, BLACK)
+      MAINWINDOW.blit(self.helpDisplay, (300,160))      
+      MAINWINDOW.blit(self.quitDisplay, (300,200))      
+      pygame.display.update()
+   def checkIfClickIsWithinMenuButtons(self,mousex,mousey,boundaryx,boundaryy,lenx,leny):
+      if mousex > boundaryx and mousex < boundaryx + lenx and mousey > boundaryy and mousey < boundaryy + leny:
+         return True
+      return False
+   def isGameOver(self):
+      if self.p1.getPoints() >= self.pointsToPlayTo:
+         if self.p2.getPoints() > self.p1.getPoints():
             print "AI wins"
             winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
             MAINWINDOW.blit(winnerDisplay, (300,100))
             pygame.display.update()
-            highScoreInterface.addScore("AI",p2.getPoints(),p1.getPoints(),turnNumber)
+            self.highScoreInterface.addScore("AI",self.p2.getPoints(),self.p1.getPoints(),self.turnNumber)
             time.sleep(3)
-            pygame.quit()
-            sys.exit()
-         
+            self.gameNotOver = False
+         else:
+            print "Player wins"
+            winnerDisplay = allFont.render("Congratulations! You WON!", 1, WHITE)
+            MAINWINDOW.blit(winnerDisplay, (300,100))
+            pygame.display.update()
+            self.highScoreInterface.addScore("player",self.p1.getPoints(),self.p2.getPoints(),self.turnNumber)
+            time.sleep(3)
+            self.gameNotOver = False
+      elif self.p2.getPoints() >= self.pointsToPlayTo:
+         print "AI wins"
+         winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
+         MAINWINDOW.blit(winnerDisplay, (300,100))
+         pygame.display.update()
+         self.highScoreInterface.addScore("AI",self.p2.getPoints(),self.p1.getPoints(),self.turnNumber)
+         time.sleep(3)
+         self.gameNotOver = False
+   def tryConqueringTile(self,attackCount,defenseCount,strength):
+      attackCount = attackCount/2
+      defenseCount = defenseCount/3 + strength
+      r = random.randint(1,100)
+      return r > (100*attackCount)/(attackCount+defenseCount)
+   def conquerTile(self, index, player, strength):
+      if player == 1:
+         color = RED
+      elif player == 2:
+         color = BLUE
+      self.b.board[index].setStatus(color)
+      self.b.board[index].setStrength(strength)
+   def drawBoard(self):
+      redCount = 0
+      blueCount = 0
+      for i in range(1,len(self.b.board)+1):
+         if self.b.board[i].getStatus() == RED:
+            redCount = redCount + 1
+         if self.b.board[i].getStatus() == BLUE:
+            blueCount = blueCount + 1
+         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.board[i].getStatus())
+         strength = allFont.render(str(self.b.board[i].getStrength()),1,BLACK)
+         MAINWINDOW.blit(strength, self.b.board[i].getCoordinate())
+      self.textBox.changeInfluence(redCount,blueCount)
+      pygame.display.update()
+      return (redCount,blueCount)
+#   
+gameLogic = gameLogic()    
+# run the game loop
+gameLogic.displayMenu()

@@ -21,7 +21,6 @@ class HighScore:
       for i in range(len(self.highScoreArray)):
          name,playerPoints,aiPoints,turns = self.highScoreArray[i]
          writeString = str(name) + " " + str(playerPoints) + " " + str(aiPoints) + " " + str(turns)
-         print writeString
          self.highScoreFile.write(writeString)
       self.highScoreFile.write("")
       self.highScoreFile.close()
