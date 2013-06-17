@@ -1,13 +1,14 @@
 Want to make the win/lose less luck based
    Fortify spaces against attacks from specific spaces
       Mark attack origins
-   Add a turn limit
    Add a cost to attacking - other than just losing a turn
    Create secondary win conditions
-      economy
-      culture
+      economy - get VPs based on fort bonus and adjacent tiles
+      culture - get 100 points for fortifying culture 3-4 times?
       
       
 Add functionality to the game itself
-   Print rules on screen
    Add replay button
+   Add High score feature
+   Add option for hotseat multiplayer
+   Add 3 player map

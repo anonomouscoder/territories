@@ -1,8 +1,10 @@
-import board, drawUtils, pygame, sys, random, time, territoriesAI
+import board, drawUtils, territoriesAI, highscore
+import pygame, sys, random, time
 from pygame.locals import *
 from drawUtils import *
 from territoriesAI import AI
 from board import Board
+from highscore import HighScore
 global currentPlayer
 # draw on the surface object
 MAINWINDOW.fill(BGCOLOR)
@@ -11,11 +13,30 @@ class textDisplay:
    currentPlayerDisplay = 0
    redPointDisplay = 0
    bluePointDisplay = 0
+   redInfluenceDisplay = 0
+   blueInfluenceDisplay = 0
+   rulesDisplay = [allFont.render("Rules:",1,WHITE),
+                   allFont.render("Click to attack adjacent territory",1,WHITE),
+                   allFont.render("Click a friendly territory to fortify by your strength",1,WHITE),
+                   allFont.render("       A   ",1,WHITE),
+                   allFont.render("% = -------",1,WHITE),
+                   allFont.render("     A + B ",1,WHITE),
+                   allFont.render("",1,WHITE),
+                   allFont.render("A = Number of territories attacker owns / 2",1,WHITE),
+                   allFont.render("A = Number of territories defender owns / 3 + fortification bonus",1,WHITE),
+                   allFont.render("",1,WHITE),
+                   allFont.render("Foreach territory:",1,WHITE),
+                   allFont.render(" gain points = max(fort bonus, number of adjacent friends)",1,WHITE)                   
+                  ]
    def updateTextDisplay(self):
-      pygame.draw.rect(MAINWINDOW, BGCOLOR, (300,0,250,60))
+      pygame.draw.rect(MAINWINDOW, BGCOLOR, (300,0,250,100))
       MAINWINDOW.blit(self.currentPlayerDisplay, (300,0))
       MAINWINDOW.blit(self.redPointDisplay, (300,20))
       MAINWINDOW.blit(self.bluePointDisplay, (300,40))
+      MAINWINDOW.blit(self.redInfluenceDisplay, (300,60))
+      MAINWINDOW.blit(self.blueInfluenceDisplay, (300,80))
+      for i in range(1,len(self.rulesDisplay)):
+         MAINWINDOW.blit(self.rulesDisplay[i], (0,300+(i-1)*20))
    def changePlayer(self):
       if self.currPlayer == 1:
          self.currPlayer = 2
@@ -30,6 +51,14 @@ class textDisplay:
       self.redPointDisplay = allFont.render(redPointsStr,1,WHITE)
       self.bluePointDisplay = allFont.render(bluePointsStr,1,WHITE)
       self.updateTextDisplay()
+   def changeInfluence(self,redInfluence,blueInfluence):
+      redInfluenceStr = "Red Player's strength = " + str(redInfluence)
+      blueInfluenceStr = "Blue Player's strength = " + str(blueInfluence)
+      
+      self.redInfluenceDisplay = allFont.render(redInfluenceStr,1,WHITE)      
+      self.blueInfluenceDisplay = allFont.render(blueInfluenceStr,1,WHITE)
+      self.updateTextDisplay()
+      
    def __init__(self,current):
       if current == 1:
          self.currPlayer = 1
@@ -39,6 +68,9 @@ class textDisplay:
          self.currentPlayerDisplay = allFont.render("AI's turn, please wait", 1, WHITE)
       self.redPointDisplay = allFont.render("Red players points = 0",1,WHITE)
       self.bluePointDisplay = allFont.render("Blue players points = 0",1,WHITE)
+      self.redInfluenceDisplay = allFont.render("Red Player's strength = 1",1,WHITE)
+      self.blueInfluenceDisplay = allFont.render("Blue Player's strength = 1",1,WHITE)
+#      self.updateRules()
       self.updateTextDisplay()
 #
 class player:
@@ -68,6 +100,8 @@ class player:
 #
 b = Board()
 ai = AI(b.board)
+highScoreInterface = HighScore()
+turnNumber = 0
 pointsToPlayTo = 200
 p1 = player()
 p2 = player()
@@ -101,6 +135,7 @@ while True:
          mousex, mousey = event.pos
          mouseClicked = True
       if mouseClicked == True:
+         turnNumber = turnNumber + 1
          #figure out where the click was
          for i in range(1,len(b.board)+1):
             if b.isWithinSquareByIndex(mousex,mousey,i):
@@ -119,7 +154,7 @@ while True:
                      b.board[i].setStatus(RED)
                      b.board[i].setStrength(redCount)
                   elif b.board[i].getStatus() == RED:
-                     b.board[i].setStrength(b.board[i].getStrength() +1)
+                     b.board[i].setStrength(redCount)
                   elif b.board[i].getStatus() == BLUE:
                      redCount = redCount/2
                      blueCount = blueCount/3 + b.board[i].getStrength()
@@ -159,6 +194,7 @@ while True:
             b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
             strength = allFont.render(str(b.board[i].getStrength()),1,BLACK)
             MAINWINDOW.blit(strength, b.board[i].getCoordinate())
+         textBox.changeInfluence(redCount,blueCount)
          pygame.display.update()
          time.sleep(0.5)
          aiMove = ai.getNextMove(b.board)
@@ -168,7 +204,7 @@ while True:
                b.board[aiMove].setStatus(BLUE)
                b.board[aiMove].setStrength(blueCount)
             elif b.board[aiMove].getStatus() == BLUE:
-               b.board[aiMove].setStrength(b.board[aiMove].getStrength() +1)
+               b.board[aiMove].setStrength(blueCount)
             elif b.board[aiMove].getStatus() == RED:
                blueCount = blueCount/2
                redCount = redCount/3 + b.board[aiMove].getStrength()
@@ -184,10 +220,17 @@ while True:
          p2.updatePoints(b.board,2)
          
          textBox.changePoints(p1.getPoints(),p2.getPoints())
+         redCount = 0
+         blueCount = 0
          for i in range(1, len(b.board)+1):
+            if b.board[i].getStatus() == RED:
+               redCount = redCount + 1
+            if b.board[i].getStatus() == BLUE:
+               blueCount = blueCount + 1
             b.drawSquareByIndex(i,b.tileLength,b.board[i].getStatus())
             strength = allFont.render(str(b.board[i].getStrength()),1,BLACK)
             MAINWINDOW.blit(strength, b.board[i].getCoordinate())
+         textBox.changeInfluence(redCount,blueCount)
          pygame.display.update()
          
          if p1.getPoints() >= pointsToPlayTo:
@@ -196,6 +239,7 @@ while True:
                winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
                MAINWINDOW.blit(winnerDisplay, (300,100))
                pygame.display.update()
+               highScoreInterface.addScore("AI",p2.getPoints(),p1.getPoints(),turnNumber)
                time.sleep(3)
                pygame.quit()
                sys.exit()
@@ -204,6 +248,7 @@ while True:
             winnerDisplay = allFont.render("Congratulations! You WON!", 1, WHITE)
             MAINWINDOW.blit(winnerDisplay, (300,100))
             pygame.display.update()
+            highScoreInterface.addScore("player",p1.getPoints(),p2.getPoints(),turnNumber)
             time.sleep(3)
             pygame.quit()
             sys.exit()
@@ -212,6 +257,7 @@ while True:
             winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
             MAINWINDOW.blit(winnerDisplay, (300,100))
             pygame.display.update()
+            highScoreInterface.addScore("AI",p2.getPoints(),p1.getPoints(),turnNumber)
             time.sleep(3)
             pygame.quit()
             sys.exit()
