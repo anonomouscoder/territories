@@ -107,6 +107,7 @@ class gameLogic:
    currentPlayer = 1
    def __init__(self):
       #nothing to initialize
+      pygame.key.set_repeat(500,100)
       MAINWINDOW.fill(BGCOLOR)
       self.gameNotOver = True
       self.b = Board()
