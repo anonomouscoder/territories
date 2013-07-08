@@ -1,10 +1,7 @@
-import board, drawUtils, territoriesAI, highscore
+import cardTable, drawUtils
 import pygame, sys, random, time
 from pygame.locals import *
 from drawUtils import *
-from territoriesAI import AI
-from board import Board
-from highscore import HighScore
 
 class textDisplay:
    currPlayer = 0
@@ -97,9 +94,6 @@ class player:
 #
 class gameLogic:   
    gameNotOver = True
-   b = Board()
-   ai = AI()
-   highScoreInterface = HighScore()
    turnNumber = 0
    pointsToPlayTo = 200
    p1 = player()
@@ -110,7 +104,6 @@ class gameLogic:
       pygame.key.set_repeat(500,100)
       MAINWINDOW.fill(BGCOLOR)
       self.gameNotOver = True
-      self.b = Board()
       self.turnNumber = 0
       self.pointsToPlayTo = 200
       self.p1 = player()
@@ -119,94 +112,7 @@ class gameLogic:
    def displayGame(self,gameMode):
       #display the actual game
       MAINWINDOW.fill(BGCOLOR)
-      for i in self.b.getRangeOfTiles():
-         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.listOfTiles[i].getStatus())
-      pygame.display.update()
-
-      self.textBox = textDisplay(self.currentPlayer)
-      self.textBox.changePoints(0,0)
-      for i in self.b.getRangeOfTiles():
-         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.listOfTiles[i].getStatus())
-         strength = allFont.render(str(self.b.listOfTiles[i].getStrength()),1,BLACK)
-         MAINWINDOW.blit(strength, self.b.listOfTiles[i].getCoordinate())
-      pygame.display.update()
-      
-      #start game loop
-      while self.gameNotOver:
-         mouseClicked = False
-         for event in pygame.event.get():
-            if event.type == QUIT:
-               pygame.quit()
-               sys.exit()
-            elif event.type == MOUSEMOTION:
-               mousex, mousey = event.pos
-            elif event.type == MOUSEBUTTONUP:
-               mousex, mousey = event.pos
-               mouseClicked = True
-            if mouseClicked == True:
-               self.turnNumber = self.turnNumber + 1
-               #figure out where the click was
-               for i in self.b.getRangeOfTiles():
-                  if self.b.isWithinSquareByIndex(mousex,mousey,i):
-                     
-                     redCount = 0
-                     blueCount = 0
-                     for j in self.b.getRangeOfTiles():
-                        if self.b.listOfTiles[j].getStatus() == RED:
-                           redCount = redCount + 1
-                        if self.b.listOfTiles[j].getStatus() == BLUE:
-                           blueCount = blueCount + 1
-                     if self.currentPlayer == 1:
-                        if not self.b.isPlayerAdjacent(i,1):
-                           continue
-                        if self.b.listOfTiles[i].getStatus() == WHITE:
-                           self.conquerTile(i,1,redCount)
-                        elif self.b.listOfTiles[i].getStatus() == RED:
-                           self.conquerTile(i,1,redCount)
-                        elif self.b.listOfTiles[i].getStatus() == BLUE:
-                           if self.tryConqueringTile(redCount,blueCount,self.b.listOfTiles[i].getStrength()):
-                              self.conquerTile(i,1,redCount)
-                        self.currentPlayer = 2
-                     elif self.currentPlayer == 2:
-                        if not self.b.isPlayerAdjacent(i,2):
-                           continue
-                        if self.b.listOfTiles[i].getStatus() == WHITE:
-                           self.conquerTile(i,2,blueCount)
-                        elif self.b.listOfTiles[i].getStatus() == BLUE:
-                           self.conquerTile(i,2,blueCount)
-                        elif self.b.listOfTiles[i].getStatus() == RED:
-                           if self.tryConqueringTile(blueCount, redCount, self.b.listOfTiles[i].getStrength()):
-                              self.conquerTile(i,2,blueCount)
-                        self.currentPlayer = 1
-                     
-               #update the board
-               MAINWINDOW.fill(BGCOLOR)
-               self.textBox.changePlayer()
-               (redCount,blueCount) = self.drawBoard()
-               
-               time.sleep(0.5)
-               aiMove = self.ai.getNextMove(self.b.listOfTiles)
-               
-               if self.b.isPlayerAdjacent(aiMove,2):
-                  if self.b.listOfTiles[aiMove].getStatus() == WHITE:
-                     self.conquerTile(aiMove,2,blueCount)
-                  elif self.b.listOfTiles[aiMove].getStatus() == BLUE:
-                     self.conquerTile(aiMove,2,blueCount)
-                  elif self.b.listOfTiles[aiMove].getStatus() == RED:
-                     if self.tryConqueringTile(blueCount, redCount, self.b.listOfTiles[aiMove].getStrength()):
-                        self.conquerTile(aiMove,2,blueCount)
-               self.currentPlayer = 1
-               
-               MAINWINDOW.fill(BGCOLOR)
-               self.textBox.changePlayer()
-               self.p1.updatePoints(self.b.listOfTiles,1)
-               self.p2.updatePoints(self.b.listOfTiles,2)
-               
-               self.textBox.changePoints(self.p1.getPoints(),self.p2.getPoints())
-               
-               (redCount,blueCount) = self.drawBoard()
-               
-               self.isGameOver()
+      return
    def displayMenu(self):
       #display the menu to start a new game, single player, multiplayer etc...
       
@@ -297,58 +203,7 @@ class gameLogic:
       if mousex > boundaryx and mousex < boundaryx + lenx and mousey > boundaryy and mousey < boundaryy + leny:
          return True
       return False
-   def isGameOver(self):
-      if self.p1.getPoints() >= self.pointsToPlayTo:
-         if self.p2.getPoints() > self.p1.getPoints():
-            print "AI wins"
-            winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
-            MAINWINDOW.blit(winnerDisplay, (300,100))
-            pygame.display.update()
-            self.highScoreInterface.addScore("AI",self.p2.getPoints(),self.p1.getPoints(),self.turnNumber)
-            time.sleep(3)
-            self.gameNotOver = False
-         else:
-            print "Player wins"
-            winnerDisplay = allFont.render("Congratulations! You WON!", 1, WHITE)
-            MAINWINDOW.blit(winnerDisplay, (300,100))
-            pygame.display.update()
-            self.highScoreInterface.addScore("player",self.p1.getPoints(),self.p2.getPoints(),self.turnNumber)
-            time.sleep(3)
-            self.gameNotOver = False
-      elif self.p2.getPoints() >= self.pointsToPlayTo:
-         print "AI wins"
-         winnerDisplay = allFont.render("So Sorry! You LOST!", 1, WHITE)
-         MAINWINDOW.blit(winnerDisplay, (300,100))
-         pygame.display.update()
-         self.highScoreInterface.addScore("AI",self.p2.getPoints(),self.p1.getPoints(),self.turnNumber)
-         time.sleep(3)
-         self.gameNotOver = False
-   def tryConqueringTile(self,attackCount,defenseCount,strength):
-      attackCount = attackCount/2
-      defenseCount = defenseCount/3 + strength
-      r = random.randint(1,100)
-      return r > (100*attackCount)/(attackCount+defenseCount)
-   def conquerTile(self, index, player, strength):
-      if player == 1:
-         color = RED
-      elif player == 2:
-         color = BLUE
-      self.b.listOfTiles[index].setStatus(color)
-      self.b.listOfTiles[index].setStrength(strength)
-   def drawBoard(self):
-      redCount = 0
-      blueCount = 0
-      for i in self.b.getRangeOfTiles():
-         if self.b.listOfTiles[i].getStatus() == RED:
-            redCount = redCount + 1
-         if self.b.listOfTiles[i].getStatus() == BLUE:
-            blueCount = blueCount + 1
-         self.b.drawSquareByIndex(i,self.b.tileLength,self.b.listOfTiles[i].getStatus())
-         strength = allFont.render(str(self.b.listOfTiles[i].getStrength()),1,BLACK)
-         MAINWINDOW.blit(strength, self.b.listOfTiles[i].getCoordinate())
-      self.textBox.changeInfluence(redCount,blueCount)
-      pygame.display.update()
-      return (redCount,blueCount)
+
 #   
 gameLogic = gameLogic()    
 # run the game loop

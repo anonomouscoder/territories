@@ -1,30 +1,13 @@
-import tile, drawUtils
-from tile import tile
-class Board:
+import card, drawUtils
+
+class CardTable:
    #variables
-   listOfTiles = 0
-   tileLength = 50
-   gap = 3  
-   columnWidth = tileLength + gap
-   rowHeight = tileLength + gap
-   oddRowOffset = 25
-   evenRowOffset = 0
-   oddRowColumnNumber = 2
-   evenRowColumnNumber = 3
-   numberOfRows = 5
-   def getRangeOfTiles(self):
-      if self.listOfTiles == 0:
-         print "running __init__()"
-         self.__init__()
-         print self.listOfTiles
-      return range(1, len(self.listOfTiles)+1)
-   def drawSquareByIndex(self,index,length,color):
-      xposition,yposition = self.listOfTiles[index].getCoordinate()
-      drawUtils.drawSquare(xposition,yposition,length,color)
+   cardWidth = 100
+   cardHeight = 200
    def isWithinSquareByIndex(self,testx,testy,index):
       x1,y1 = self.listOfTiles[index].getCoordinate()
-      x2 = x1 + self.tileLength
-      y2 = y1 + self.tileLength
+      x2 = x1 + self.cardWidth
+      y2 = y1 + self.cardHeight
       return drawUtils.isWithinSquareByCoordinate(testx,testy,x1,y1,x2,y2)
    def getColumnCoor(self,columnIndex,rowIndex):
       if rowIndex % 2 == 1:

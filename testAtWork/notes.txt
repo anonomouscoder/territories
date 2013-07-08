@@ -8,7 +8,5 @@ Want to make the win/lose less luck based
       
       
 Add functionality to the game itself
-   Add replay button
-   Add High score feature
    Add option for hotseat multiplayer
    Add 3 player map

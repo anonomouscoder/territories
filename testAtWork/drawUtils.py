@@ -1,6 +1,7 @@
 import pygame, sys
 from pygame.locals import *
 from pygame import font
+from pygame.sprite import DirtySprite, LayeredDirty
 pygame.init()
 global allFont
 allFont = font.SysFont("monospace",15)
@@ -8,9 +9,30 @@ allFont = font.SysFont("monospace",15)
 global MAINWINDOW
 MAINWINDOW = pygame.display.set_mode((600, 600), 0, 32)
 pygame.display.set_caption('Territories')
-
+global fullWindowGroup
+fullWindowGroup = LayeredDirty()
+global groupList
+groupList = []
+groupList.append(fullWindowGroup)
 def drawSquare(xposition,yposition,length,color):
    pygame.draw.rect(MAINWINDOW, color, (xposition,yposition,length,length))
+
+#groups
+def addGroup():
+   newGroup = LayeredDirty()
+   groupList.append(newGroup)
+def drawGroup(group):
+   dirty = group.draw(MAINWINDOW)
+   pygame.display.update(dirty)
+def drawAllGroups():
+   for g in groupList:
+      drawGroup(g)
+#dirty dirty sprites
+def addNewSpriteToGroupByIndex(image,groupIndex):
+   sprite = DirtySprite()
+   sprite.image = image
+   sprite.rect = image.get_rect()
+   groupList[groupIndex].add(sprite)
 def isWithinSquareByCoordinate(testx,testy,x1,y1,x2,y2):
    if testx > x1 and testx < x2 and testy > y1 and testy < y2:
      return True
