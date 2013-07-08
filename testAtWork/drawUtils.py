@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, os, time
 from pygame.locals import *
 from pygame import font
 from pygame.sprite import DirtySprite, LayeredDirty
@@ -28,10 +28,13 @@ def drawAllGroups():
    for g in groupList:
       drawGroup(g)
 #dirty dirty sprites
-def addNewSpriteToGroupByIndex(image,groupIndex):
+def addNewSpriteToGroupByIndex(directory,filename,groupIndex,(xOffset,yOffset)):
+   image = pygame.image.load(os.path.join(directory,filename))
    sprite = DirtySprite()
    sprite.image = image
-   sprite.rect = image.get_rect()
+   rect = image.get_rect()
+   rect.move_ip(xOffset,yOffset)
+   sprite.rect = rect
    groupList[groupIndex].add(sprite)
 def isWithinSquareByCoordinate(testx,testy,x1,y1,x2,y2):
    if testx > x1 and testx < x2 and testy > y1 and testy < y2:
